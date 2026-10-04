@@ -1,4 +1,5 @@
 import streamlit as st
+from app.agent import ask_agent
 import requests
 from helpers.helper_functions import escape_dollars
 
@@ -27,23 +28,33 @@ if user_input:
     # Get agent response
     with st.chat_message("assistant"):
         with st.spinner("Thinking..."):
-            try:
-                payload = {"message":user_input}
-                response =requests.post(f"{API_URL}/chat",json=payload)
+            result = ask_agent(user_input)
+            st.write(escape_dollars(result["response"]))
+            # try:
+            #     payload = {"message":user_input}
+            #     response =requests.post(f"{API_URL}/chat",json=payload)
 
-                if response.status_code == 200:
-                    answer = response.json()["response"]
-                    st.write(escape_dollars(answer))
+            #     if response.status_code == 200:
+            #         answer = response.json()["response"]
+            #         st.write(escape_dollars(answer))
 
-                    st.session_state.messages.append({
-                                "role": "assistant",
-                                "content": answer,
-                                "handoff": response.json()["handoff"]
-                            })
-                else:
-                    st.error(response.json().get("detail","Something went wrong."))
+            #         st.session_state.messages.append({
+            #                     "role": "assistant",
+            #                     "content": answer,
+            #                     "handoff": response.json()["handoff"]
+            #                 })
+            #     else:
+            #         st.error(response.json().get("detail","Something went wrong."))
 
-            except requests.exceptions.ConnectionError:
-                st.error("Could not connect to the FastAPI server.")
+            # except requests.exceptions.ConnectionError:
+            #     st.error("Could not connect to the FastAPI server.")
+        
+        st.session_state.messages.append({
+        "role": "assistant",
+        "content": result["response"],
+        "handoff": result["handoff"]
+        })
+
+
 
         
